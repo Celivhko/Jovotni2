@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+  <meta charset="UTF-8">
+  <title>Prolog Животни</title>
+  <script src="https://unpkg.com/tau-prolog@0.3.1/modules/core.js"></script>
+  <script src="https://unpkg.com/tau-prolog@0.3.1/modules/lists.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background-color: #f0f8ff;
+    }
+    input, button {
+      font-size: 18px;
+      padding: 10px;
+      margin: 10px 0;
+    }
+    .animal-gif {
+      width: 300px;
+      height: auto;
+      display: block;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🐾 Prolog Животни</h1>
+  <p>Въведи Prolog заявка, напр. <code>is_mammal(X).</code></p>
+  <input type="text" id="queryInput" placeholder="Въведи Prolog заявка тук">
+  <button onclick="runQuery()">Изпълни</button>
+  <div id="resultArea"></div>
+
+  <script>
+    const knowledge = `
+      animal(elephant).
+      animal(lion).
+      animal(dog).
+      animal(cat).
+      animal(giraffe).
+
+      is_mammal(X) :- animal(X).
+
+      likes_meat(lion).
+      likes_meat(cat).
+      likes_meat(dog).
+
+      herbivore(elephant).
+      herbivore(giraffe).
+    `;
+
+    const animalAnimations = {
+      elephant: '<img src="https://media.giphy.com/media/3oEjI6SIIHBdRxXI40/giphy.gif" class="animal-gif" alt="Elephant" />',
+      lion: '<img src="https://media.giphy.com/media/11sBLVxNs7v6WA/giphy.gif" class="animal-gif" alt="Lion" />',
+      dog: '<img src="https://media.giphy.com/media/3o6Zt481isNVuQI1l6/giphy.gif" class="animal-gif" alt="Dog" />',
+      cat: '<img src="https://media.giphy.com/media/JIX9t2j0ZTN9S/giphy.gif" class="animal-gif" alt="Cat" />',
+      giraffe: '<img src="https://media.giphy.com/media/xT9IgzoKnwFNmISR8I/giphy.gif" class="animal-gif" alt="Giraffe" />'
+    };
+
+    function runQuery() {
+      const query = document.getElementById('queryInput').value.trim();
+      const resultArea = document.getElementById('resultArea');
+      resultArea.innerHTML = 'Обработка...';
+
+      const session = pl.create();
+      session.consult(knowledge, {
+        success: () => {
+          session.query(query, {
+            success: () => {
+              session.answers(answer => {
+                if (pl.type.is_substitution(answer)) {
+                  const formatted = pl.format_answer(answer);
+                  const match = formatted.match(/X = (\w+)/);
+                  if (match) {
+                    const animal = match[1];
+                    if (animalAnimations[animal]) {
+                      resultArea.innerHTML = animalAnimations[animal];
+                    } else {
+                      resultArea.innerHTML = `Няма GIF за <strong>${animal}</strong>.`;
+                    }
+                  } else {
+                    resultArea.innerHTML = 'Няма резултати.';
+                  }
+                } else {
+                  resultArea.innerHTML = 'Няма съвпадения.';
+                }
+              });
+            },
+            error: () => {
+              resultArea.innerHTML = 'Грешка в заявката.';
+            }
+          });
+        },
+        error: () => {
+          resultArea.innerHTML = 'Грешка при зареждане на базата знания.';
+        }
+      });
+    }
+  </script>
+
+</body>
+</html>
